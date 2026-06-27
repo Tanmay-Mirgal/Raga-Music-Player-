@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String            @id // Clerk User ID
+  email              String            @unique
+  firstName          String?
+  lastName           String?
+  profileImageUrl    String?
+  preferredLanguages String[]
+  preferredGenres    String[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  playlists          Playlist[]
+  interactions       UserInteraction[]
+  likedSongs         LikedSong[]
+}
+
+model Playlist {
+  id            String   @id @default(cuid())
+  title         String
+  userId        String
+  coverImageUrl String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlistSongs PlaylistSong[]
+}
+
+model PlaylistSong {
+  id         String   @id @default(cuid())
+  playlistId String
+  songId     String
+  addedAt    DateTime @default(now())
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  song       SaavnSong @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, songId])
+}
+
+model SaavnSong {
+  id              String            @id // JioSaavn Song ID
+  name            String
+  artist          String
+  album           String?
+  genre           String?
+  imageUrl        String?
+  rawDataJson     String?           // Store stringified JSON representation of the entire track object
+  vectorEmbedding String?           // Store JSON string representation of floats
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  interactions    UserInteraction[]
+  playlistSongs   PlaylistSong[]
+  likedSongs      LikedSong[]
+}
+
+model LikedSong {
+  id        String   @id @default(cuid())
+  userId    String
+  songId    String
+  createdAt DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song      SaavnSong @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+}
+
+model UserInteraction {
+  id              String    @id @default(cuid())
+  userId          String
+  songId          String
+  interactionType String    // "play", "like", "skip", "playlist_add"
+  weight          Int       @default(1) // Play = 1, Skip = -1, Like = 3, PlaylistAdd = 2
+  playDuration    Int?      // in seconds
+  timestamp       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song            SaavnSong @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([songId])
+}
