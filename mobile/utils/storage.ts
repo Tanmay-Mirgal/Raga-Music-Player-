@@ -7,7 +7,7 @@ let memoryDownloads: any[] = [];
 export const getDownloads = async (): Promise<any[]> => {
   if (Platform.OS === 'web') {
     try {
-      const content = window.localStorage.getItem('riffy_downloads');
+      const content = window.localStorage.getItem('raga_downloads');
       return content ? JSON.parse(content) : [];
     } catch (e) {
       console.error('Error reading downloads from localStorage:', e);
@@ -22,7 +22,7 @@ export const getDownloads = async (): Promise<any[]> => {
   }
 
   try {
-    const file = `${dir}riffy_downloads.json`;
+    const file = `${dir}raga_downloads.json`;
     const fileInfo = await FileSystem.getInfoAsync(file);
     if (!fileInfo.exists) return [];
     const content = await FileSystem.readAsStringAsync(file);
@@ -41,7 +41,7 @@ export const saveDownloads = async (downloads: any[]) => {
   const data = Array.isArray(downloads) ? downloads : [];
   if (Platform.OS === 'web') {
     try {
-      window.localStorage.setItem('riffy_downloads', JSON.stringify(data));
+      window.localStorage.setItem('raga_downloads', JSON.stringify(data));
     } catch (e) {
       console.error('Error saving downloads to localStorage:', e);
     }
@@ -56,7 +56,7 @@ export const saveDownloads = async (downloads: any[]) => {
   }
 
   try {
-    const file = `${dir}riffy_downloads.json`;
+    const file = `${dir}raga_downloads.json`;
     await FileSystem.writeAsStringAsync(file, JSON.stringify(data));
   } catch (e) {
     console.error('Error writing downloads file:', e);

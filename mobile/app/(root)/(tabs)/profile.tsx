@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, Modal, SafeAreaView, Dimensions, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, SafeAreaView, Dimensions, FlatList } from 'react-native';
+import { Image } from 'expo-image';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import React, { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,8 +26,8 @@ export default function ProfileScreen() {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [menuTrack, setMenuTrack] = useState<Track | null>(null);
 
-  const displayName = user?.fullName || user?.firstName || user?.emailAddresses[0]?.emailAddress.split('@')[0] || 'Riffy Listener';
-  const emailAddress = user?.emailAddresses[0]?.emailAddress || 'listener@riffy.com';
+  const displayName = user?.fullName || user?.firstName || user?.emailAddresses[0]?.emailAddress.split('@')[0] || 'Raga Listener';
+  const emailAddress = user?.emailAddresses[0]?.emailAddress || 'listener@raga.com';
   const userImage = user?.imageUrl;
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function ProfileScreen() {
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/playlists?userId=${user.id}`);
       if (res.ok) {
         const saved = await res.json();
+        console.log('[Library] Playlists fetched:', JSON.stringify(saved, null, 2));
         setPlaylists(saved);
       }
     } catch (e) {
@@ -51,7 +53,7 @@ export default function ProfileScreen() {
   };
 
   const handleLogOut = () => {
-    Alert.alert('Log Out', 'Are you sure you want to sign out from Riffy?', [
+    Alert.alert('Log Out', 'Are you sure you want to sign out from Raga?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Log Out',
@@ -213,9 +215,13 @@ export default function ProfileScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
               {playlists.map((pl) => (
                 <TouchableOpacity key={pl.id} style={styles.playlistCard} onPress={() => handleOpenPlaylist(pl)}>
-                  <View style={styles.playlistArtPlaceholder}>
-                    <Ionicons name="musical-notes" size={32} color="#B3B3B3" />
-                  </View>
+                  {pl.coverImageUrl ? (
+                    <Image source={{ uri: pl.coverImageUrl }} style={styles.playlistArt} />
+                  ) : (
+                    <View style={styles.playlistArtPlaceholder}>
+                      <Ionicons name="musical-notes" size={32} color="#B3B3B3" />
+                    </View>
+                  )}
                   <Text style={styles.playlistName} numberOfLines={1}>
                     {pl.name}
                   </Text>
@@ -312,6 +318,19 @@ export default function ProfileScreen() {
               data={selectedPlaylist.tracks}
               keyExtractor={(item) => item.id}
               contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+              ListHeaderComponent={
+                <View style={styles.detailHeaderComponent}>
+                  {selectedPlaylist.coverImageUrl ? (
+                    <Image source={{ uri: selectedPlaylist.coverImageUrl }} style={styles.detailCoverImage} />
+                  ) : (
+                    <View style={styles.detailCoverPlaceholder}>
+                      <Ionicons name="musical-notes" size={48} color="#B3B3B3" />
+                    </View>
+                  )}
+                  <Text style={styles.detailPlaylistTitle}>{selectedPlaylist.name}</Text>
+                  <Text style={styles.detailPlaylistSubtitle}>{selectedPlaylist.tracks?.length || 0} songs</Text>
+                </View>
+              }
               renderItem={({ item }) => {
                 const songImg = item.image?.[1]?.url || item.image?.[0]?.url;
                 const isCurrent = currentTrack?.id === item.id;
@@ -471,6 +490,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  playlistArt: {
+    width: 110,
+    height: 110,
+    borderRadius: 6,
+    marginBottom: 8,
+    backgroundColor: '#282828',
+  },
   playlistName: {
     color: '#FFFFFF',
     fontSize: 13,
@@ -606,5 +632,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     paddingHorizontal: 40,
+  },
+  detailHeaderComponent: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    gap: 8,
+  },
+  detailCoverImage: {
+    width: 180,
+    height: 180,
+    borderRadius: 8,
+    backgroundColor: '#282828',
+  },
+  detailCoverPlaceholder: {
+    width: 180,
+    height: 180,
+    borderRadius: 8,
+    backgroundColor: '#282828',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  detailPlaylistTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  detailPlaylistSubtitle: {
+    color: '#B3B3B3',
+    fontSize: 14,
+    marginTop: 4,
+    textAlign: 'center',
   },
 });

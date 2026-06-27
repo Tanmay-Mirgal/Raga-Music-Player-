@@ -85,7 +85,7 @@ export default function SignInScreen() {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.title}>Riffy</Text>
+        <Text style={styles.title}>Raga</Text>
         <Text style={styles.subtitle}>Soundscape, unlocked.</Text>
       </View>
 
@@ -151,7 +151,7 @@ export default function SignInScreen() {
       </View>
       
       <View style={styles.footer}>
-        <Text style={styles.footerText}>New to Riffy?</Text>
+        <Text style={styles.footerText}>New to Raga?</Text>
         <Link href="/sign-up" asChild>
           <TouchableOpacity>
             <Text style={styles.link}>Create account</Text>

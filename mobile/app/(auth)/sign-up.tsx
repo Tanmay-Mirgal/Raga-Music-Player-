@@ -76,7 +76,7 @@ export default function SignUpScreen() {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.title}>Riffy</Text>
+        <Text style={styles.title}>Raga</Text>
         <Text style={styles.subtitle}>Sign up to start listening.</Text>
       </View>
 

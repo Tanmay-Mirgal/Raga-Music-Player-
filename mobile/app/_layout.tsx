@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
 import { Slot } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { loadTrackPlayer } from '../utils/trackPlayer';
 
 const tokenCache = {
   async getToken(key: string) {
@@ -36,6 +38,32 @@ if (!publishableKey) {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    let cancelled = false;
+
+    const registerPlaybackService = async () => {
+      const tp = await loadTrackPlayer();
+      if (cancelled || !tp) {
+        return;
+      }
+
+      const serviceModule = await import('../services/PlaybackService').catch((error) => {
+        console.warn('[TrackPlayer] Playback service unavailable:', error);
+        return null;
+      });
+
+      if (!cancelled && serviceModule?.PlaybackService) {
+        tp.registerPlaybackService(() => serviceModule.PlaybackService);
+      }
+    };
+
+    void registerPlaybackService();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
       <ClerkLoaded>

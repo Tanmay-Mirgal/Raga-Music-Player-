@@ -25,7 +25,7 @@ let memoryRecentSearches: any[] = [];
 const loadRecentSearches = async (): Promise<any[]> => {
   if (Platform.OS === 'web') {
     try {
-      const raw = window.localStorage.getItem('riffy_recent_searches');
+      const raw = window.localStorage.getItem('raga_recent_searches');
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
@@ -36,7 +36,7 @@ const loadRecentSearches = async (): Promise<any[]> => {
   if (!dir) return memoryRecentSearches;
 
   try {
-    const file = `${dir}riffy_recent_searches.json`;
+    const file = `${dir}raga_recent_searches.json`;
     const info = await FileSystem.getInfoAsync(file);
     if (!info.exists) return [];
     const raw = await FileSystem.readAsStringAsync(file);
@@ -50,7 +50,7 @@ const loadRecentSearches = async (): Promise<any[]> => {
 const saveRecentSearches = async (items: any[]) => {
   if (Platform.OS === 'web') {
     try {
-      window.localStorage.setItem('riffy_recent_searches', JSON.stringify(items));
+      window.localStorage.setItem('raga_recent_searches', JSON.stringify(items));
     } catch {}
     return;
   }
@@ -62,7 +62,7 @@ const saveRecentSearches = async (items: any[]) => {
   }
 
   try {
-    const file = `${dir}riffy_recent_searches.json`;
+    const file = `${dir}raga_recent_searches.json`;
     await FileSystem.writeAsStringAsync(file, JSON.stringify(items));
   } catch {}
 };

@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from 'expo-file-system/legacy';
 import { getDownloads, saveDownloads } from '../../../utils/storage';
 import { useAudio } from '../../../context/AudioContext';
+import { LinearGradient } from 'expo-linear-gradient';
 import TrackMenuModal from '../../../components/TrackMenuModal';
 import { MemoizedGridTile } from '../../../components/MemoizedGridTile';
 import { MemoizedAlbumCard } from '../../../components/MemoizedAlbumCard';
@@ -88,6 +89,43 @@ export default function HomeScreen() {
 
   // Downloaded Songs details submodal state
   const [isDownloadsModalVisible, setIsDownloadsModalVisible] = useState(false);
+
+  // Smart Mix states
+  const [smartMixLoading, setSmartMixLoading] = useState(false);
+
+  const playSmartMix = async () => {
+    if (!user) return;
+    try {
+      setSmartMixLoading(true);
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/recommendations?userId=${user.id}`);
+      if (res.ok) {
+        const recommendedTracks = await res.json();
+        if (recommendedTracks && recommendedTracks.length > 0) {
+          const formattedTracks = recommendedTracks.map((song: any) => ({
+            id: song.id,
+            name: song.name,
+            artists: {
+              primary: song.artists?.primary || [{ name: 'Unknown Artist' }]
+            },
+            image: song.image || [],
+            downloadUrl: song.downloadUrl || []
+          }));
+
+          playTrack(formattedTracks[0], formattedTracks);
+          Alert.alert('Raga Smart Mix', 'Playing your personalized AI Smart Mix!');
+        } else {
+          Alert.alert('Smart Mix Empty', 'Add some liked songs to build your mix!');
+        }
+      } else {
+        Alert.alert('Error', 'Failed to generate recommendations.');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'An error occurred fetching recommendations.');
+    } finally {
+      setSmartMixLoading(false);
+    }
+  };
 
   const displayName = user?.firstName || user?.emailAddresses[0]?.emailAddress.split('@')[0] || 'Listener';
 
@@ -435,6 +473,36 @@ export default function HomeScreen() {
             )}
           </View>
         </View>
+
+        {/* AI Smart Mix Banner */}
+        <TouchableOpacity
+          style={styles.smartMixBanner}
+          onPress={playSmartMix}
+          disabled={smartMixLoading}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#1DB954', '#191414']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.smartMixGradient}
+          >
+            <View style={styles.smartMixContent}>
+              <View style={styles.smartMixLeft}>
+                <Ionicons name="sparkles" size={24} color="#FFFFFF" style={styles.smartMixIcon} />
+                <View>
+                  <Text style={styles.smartMixTitle}>Raga AI Smart Mix</Text>
+                  <Text style={styles.smartMixSubtitle}>Personalized recommendations based on your taste</Text>
+                </View>
+              </View>
+              {smartMixLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Ionicons name="play-circle" size={32} color="#FFFFFF" />
+              )}
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
 
         {/* Dynamic Quick Play Grid */}
         {gridItems.length > 0 && (
@@ -1032,5 +1100,38 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 6,
+  },
+  smartMixBanner: {
+    marginHorizontal: 16,
+    marginBottom: 20,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  smartMixGradient: {
+    padding: 16,
+  },
+  smartMixContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  smartMixLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 12,
+  },
+  smartMixIcon: {
+    marginRight: 12,
+  },
+  smartMixTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  smartMixSubtitle: {
+    color: '#B3B3B3',
+    fontSize: 11,
+    marginTop: 2,
   },
 });

@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, SafeAreaView, FlatList, Image, Dimensions, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, SafeAreaView, FlatList, Dimensions, TextInput, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -275,7 +276,11 @@ export default function PlaylistsScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.playlistArtBox}>
-                <Ionicons name="musical-notes" size={24} color="#B3B3B3" />
+                {item.coverImageUrl ? (
+                  <Image source={{ uri: item.coverImageUrl }} style={styles.playlistArtImage} />
+                ) : (
+                  <Ionicons name="musical-notes" size={24} color="#B3B3B3" />
+                )}
               </View>
               <View style={styles.playlistMeta}>
                 <Text style={styles.playlistName} numberOfLines={1}>
@@ -333,7 +338,12 @@ export default function PlaylistsScreen() {
 
                     {/* Cover Image */}
                     <View style={styles.heroCoverWrapper}>
-                      {selectedPlaylist.tracks && selectedPlaylist.tracks.length > 0 ? (
+                      {selectedPlaylist.coverImageUrl ? (
+                        <Image
+                          source={{ uri: selectedPlaylist.coverImageUrl }}
+                          style={styles.heroCoverImage}
+                        />
+                      ) : selectedPlaylist.tracks && selectedPlaylist.tracks.length > 0 ? (
                         <Image
                           source={{ uri: selectedPlaylist.tracks[0].image?.[2]?.url || selectedPlaylist.tracks[0].image?.[1]?.url || selectedPlaylist.tracks[0].image?.[0]?.url }}
                           style={styles.heroCoverImage}
@@ -601,6 +611,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  playlistArtImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 4,
   },
   playlistMeta: {
     flex: 1,
