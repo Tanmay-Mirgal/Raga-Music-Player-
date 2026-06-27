@@ -10,6 +10,7 @@ import {
   renamePlaylist,
 } from '../controllers/playlistController.js';
 import { getLikedSongs, likeSong, unlikeSong } from '../controllers/likeController.js';
+import { getRecommendations } from '../controllers/recommendationController.js';
 
 const router = express.Router();
 
@@ -38,5 +39,8 @@ router.delete('/playlists/:playlistId/songs/:songId', removeSongFromPlaylist);
 router.get('/likes', getLikedSongs);
 router.post('/likes', likeSong);
 router.delete('/likes', unlikeSong);
+
+// Recommendations
+router.get('/recommendations', getRecommendations);
 
 export default router;

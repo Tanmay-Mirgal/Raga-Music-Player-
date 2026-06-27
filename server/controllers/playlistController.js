@@ -70,10 +70,53 @@ export const createPlaylist = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    let artPrompt = `${title} music playlist album cover art, clean minimal vector illustration, modern design`;
+    const groqKey = process.env.GROQ_API_KEY;
+
+    if (groqKey) {
+      try {
+        console.log(`[Cover Gen] Generating prompt for playlist "${title}" using Groq`);
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${groqKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an art director. Generate a short, highly descriptive image prompt (maximum 20 words) for a playlist cover art based on the playlist title. Your output must be ONLY the prompt text, no introductory words, no quotes, no conversational filler.'
+              },
+              { role: 'user', content: `Playlist Title: "${title}"` },
+            ],
+            temperature: 0.8,
+          }),
+        });
+
+        if (response.ok) {
+          const completion = await response.json();
+          const responseText = completion.choices?.[0]?.message?.content?.trim();
+          if (responseText) {
+            artPrompt = responseText;
+            console.log(`[Cover Gen] Groq generated prompt: "${artPrompt}"`);
+          }
+        }
+      } catch (e) {
+        console.error('[Cover Gen] Groq prompt generation failed, falling back to default prompt:', e);
+      }
+    }
+
+    // Generate a unique seed to ensure unique images for duplicate playlist titles
+    const seed = Math.floor(Math.random() * 1000000);
+    const coverImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(artPrompt)}?width=500&height=500&nologo=true&seed=${seed}`;
+
     const playlist = await prisma.playlist.create({
       data: {
         userId,
         title,
+        coverImageUrl,
       },
     });
 
