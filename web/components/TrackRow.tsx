@@ -53,12 +53,32 @@ const TrackRow = memo(function TrackRow({
 
       {/* Track info */}
       <div className="flex-1 min-w-0">
-        <p className={cn(
-          'text-sm font-semibold truncate',
-          isCurrent ? 'text-[#1DB954]' : 'text-white'
-        )}>
-          {name}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className={cn(
+            'text-sm font-semibold truncate',
+            isCurrent ? 'text-[#1DB954]' : 'text-white'
+          )}>
+            {name}
+          </p>
+          {isCurrent && (
+            <div className="flex items-end gap-0.5 h-3 flex-shrink-0 mb-0.5">
+              {[0, 1, 2].map((b) => (
+                <div
+                  key={b}
+                  className={cn(
+                    "w-0.5 bg-[#1DB954] rounded-full",
+                    isPlaying ? "animate-bounce" : "h-1"
+                  )}
+                  style={{
+                    height: isPlaying ? '10px' : '3px',
+                    animationDelay: `${b * 0.15}s`,
+                    animationDuration: '0.8s'
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
         <p className="text-xs text-[#B3B3B3] truncate mt-0.5">{artist}</p>
       </div>
 

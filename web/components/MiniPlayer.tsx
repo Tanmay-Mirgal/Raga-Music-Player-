@@ -103,15 +103,34 @@ export default function MiniPlayer() {
               {imageUrl && <img src={imageUrl} alt={currentTrack.name} className="w-full h-full object-cover" />}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-white truncate hover:underline">{currentTrack.name}</p>
+              <div className="flex items-center gap-2.5">
+                <p className="text-sm font-bold text-white truncate hover:underline">{currentTrack.name}</p>
+                {/* Visualizer Equalizer */}
+                <div className="flex items-end gap-0.5 h-3 flex-shrink-0 mb-0.5">
+                  {[0, 1, 2].map((b) => (
+                    <div
+                      key={b}
+                      className={cn(
+                        "w-0.5 bg-[#1DB954] rounded-full",
+                        isPlaying ? "animate-bounce" : "h-1"
+                      )}
+                      style={{
+                        height: isPlaying ? '10px' : '3px',
+                        animationDelay: `${b * 0.15}s`,
+                        animationDuration: '0.8s'
+                      }}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleLikeTrack(currentTrack); }}
+                  className="p-1 text-[#B3B3B3] hover:text-white transition-colors flex-shrink-0"
+                >
+                  <Heart size={15} className={cn('transition-all', isLiked ? 'text-[#1DB954] fill-[#1DB954]' : 'hover:scale-105')} />
+                </button>
+              </div>
               <p className="text-xs text-[#B3B3B3] truncate mt-0.5 hover:underline hover:text-white">{artistName}</p>
             </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleLikeTrack(currentTrack); }}
-              className="p-2 text-[#B3B3B3] hover:text-white transition-colors flex-shrink-0"
-            >
-              <Heart size={18} className={cn('transition-all', isLiked ? 'text-[#1DB954] fill-[#1DB954]' : 'hover:scale-105')} />
-            </button>
           </div>
 
           {/* Center Column: Player Controls + Progress Bar */}

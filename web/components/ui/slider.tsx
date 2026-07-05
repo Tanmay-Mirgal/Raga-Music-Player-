@@ -1,5 +1,4 @@
 import { Slider as SliderPrimitive } from "@base-ui/react/slider"
-
 import { cn } from "@/lib/utils"
 
 function Slider({
@@ -18,7 +17,7 @@ function Slider({
 
   return (
     <SliderPrimitive.Root
-      className={cn("data-horizontal:w-full data-vertical:h-full", className)}
+      className={cn("relative flex items-center w-full h-5 select-none touch-none", className)}
       data-slot="slider"
       defaultValue={defaultValue}
       value={value}
@@ -27,21 +26,21 @@ function Slider({
       thumbAlignment="edge"
       {...props}
     >
-      <SliderPrimitive.Control className="relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col">
+      <SliderPrimitive.Control className="relative flex items-center w-full h-full select-none">
         <SliderPrimitive.Track
           data-slot="slider-track"
-          className="relative grow overflow-hidden rounded-full bg-muted select-none data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+          className="relative w-full h-1 bg-white/15 rounded-full grow overflow-hidden"
         >
           <SliderPrimitive.Indicator
             data-slot="slider-range"
-            className="bg-primary select-none data-horizontal:h-full data-vertical:w-full"
+            className="absolute h-full bg-[#1DB954] rounded-full"
           />
         </SliderPrimitive.Track>
         {Array.from({ length: _values.length }, (_, index) => (
           <SliderPrimitive.Thumb
             data-slot="slider-thumb"
             key={index}
-            className="relative block size-3 shrink-0 rounded-full border border-ring bg-white ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
+            className="relative block w-3 h-3 rounded-full bg-white transition-transform hover:scale-110 active:scale-95 outline-none cursor-pointer"
           />
         ))}
       </SliderPrimitive.Control>

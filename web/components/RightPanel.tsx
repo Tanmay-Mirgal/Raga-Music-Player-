@@ -77,25 +77,25 @@ export default function RightPanel() {
             </div>
           </div>
 
-          {/* Track details */}
-          <div className="flex items-start justify-between gap-3 mb-6">
-            <div className="min-w-0 flex-1">
+          {/* Track details (Heart inline with Title) */}
+          <div className="flex flex-col min-w-0 mb-6">
+            <div className="flex items-center justify-between w-full">
               <h3 className="text-white font-black text-lg truncate hover:underline cursor-pointer">
                 {currentTrack.name}
               </h3>
-              <p className="text-sm text-[#B3B3B3] truncate mt-0.5 hover:text-white cursor-pointer">
-                {artistName}
-              </p>
+              <button
+                onClick={() => toggleLikeTrack(currentTrack)}
+                className="p-1 text-[#B3B3B3] hover:text-white transition-colors flex-shrink-0"
+              >
+                <Heart
+                  size={18}
+                  className={cn('transition-all', isLiked ? 'text-[#1DB954] fill-[#1DB954]' : 'hover:scale-110')}
+                />
+              </button>
             </div>
-            <button
-              onClick={() => toggleLikeTrack(currentTrack)}
-              className="p-1.5 text-[#B3B3B3] hover:text-white transition-colors"
-            >
-              <Heart
-                size={20}
-                className={cn('transition-all', isLiked ? 'text-[#1DB954] fill-[#1DB954]' : 'hover:scale-110')}
-              />
-            </button>
+            <p className="text-sm text-[#B3B3B3] truncate mt-0.5 hover:text-white cursor-pointer">
+              {artistName}
+            </p>
           </div>
 
           {/* Divider */}
