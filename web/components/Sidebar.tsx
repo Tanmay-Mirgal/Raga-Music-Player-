@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import { usePathname, useRouter } from 'next/navigation';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { getPlaylists } from '@/lib/api';
 import { Home, Search, ListMusic, User, Music2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,14 +17,23 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useUser();
+  const { signOut } = useClerk();
+  
   const [playlists, setPlaylists] = useState<any[]>([]);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
       getPlaylists(user.id).then(setPlaylists).catch(console.error);
     }
   }, [user]);
+
+  const handleLogOut = async () => {
+    if (!confirm('Are you sure you want to sign out from Raga?')) return;
+    await signOut({ redirectUrl: '/sign-in' });
+  };
 
   return (
     <>
@@ -33,7 +42,7 @@ export default function Sidebar() {
         {/* Logo */}
         <div className="px-6 mb-8 flex items-center gap-3">
           <img src="/icon.png" alt="Raga Logo" className="w-8 h-8 object-contain" />
-          <span className="text-white font-black text-xl tracking-tight">Raga</span>
+          <span className="text-white font-black text-2xl tracking-wide font-logo">Raga</span>
         </div>
 
         {/* Nav Links */}
@@ -87,8 +96,51 @@ export default function Sidebar() {
           </div>
         </div>
 
+        {/* User Account / Sign Out Section */}
+        {user && (
+          <div className="relative px-3 mt-auto pt-4 border-t border-white/5">
+            <button
+              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+              className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-white/5 transition-colors text-left"
+            >
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-[#282828] flex-shrink-0 flex items-center justify-center border border-white/10">
+                {user.imageUrl ? (
+                  <img src={user.imageUrl} alt={user.firstName || 'User'} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-bold text-xs">
+                    {user.firstName?.charAt(0) || 'U'}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-bold text-sm truncate">{user.firstName || 'Listener'}</p>
+                <p className="text-[#B3B3B3] text-xs truncate">View Account</p>
+              </div>
+            </button>
+
+            {/* Dropdown Menu */}
+            {profileMenuOpen && (
+              <div className="absolute bottom-full left-3 right-3 mb-2 bg-[#282828] border border-white/10 rounded-md shadow-xl overflow-hidden z-50 py-1">
+                <Link
+                  href="/profile"
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-white/5 transition-colors"
+                >
+                  Account Profile
+                </Link>
+                <button
+                  onClick={handleLogOut}
+                  className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-white/5 transition-colors border-t border-white/5"
+                >
+                  Log Out
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Tagline at bottom */}
-        <div className="mt-auto px-6 pt-4">
+        <div className="px-6 pt-3">
           <p className="text-[#535353] text-xs">Soundscape, unlocked.</p>
         </div>
       </aside>

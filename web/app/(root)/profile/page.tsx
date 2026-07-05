@@ -49,8 +49,7 @@ export default function ProfilePage() {
 
   const handleLogOut = async () => {
     if (!confirm('Are you sure you want to sign out from Raga?')) return;
-    await signOut();
-    router.replace('/sign-in');
+    await signOut({ redirectUrl: '/sign-in' });
   };
 
   const handleResetPreferences = async () => {

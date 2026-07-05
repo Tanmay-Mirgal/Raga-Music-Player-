@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
+  --font-logo: 'Cinzel', serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
