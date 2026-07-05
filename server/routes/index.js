@@ -1,5 +1,5 @@
 import express from 'express';
-import { recordInteraction } from '../controllers/interactionController.js';
+import { recordInteraction, getRecentPlays } from '../controllers/interactionController.js';
 import { syncUser, getUserPreferences, saveUserPreferences } from '../controllers/userController.js';
 import {
   getUserPlaylists,
@@ -21,6 +21,7 @@ router.get('/health', (req, res) => {
 
 // Interactions
 router.post('/interactions', recordInteraction);
+router.get('/interactions/recent', getRecentPlays);
 
 // User sync & preferences
 router.post('/users/sync', syncUser);

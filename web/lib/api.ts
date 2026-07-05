@@ -102,6 +102,12 @@ export async function logInteraction(userId: string, track: any, interactionType
   });
 }
 
+export async function getRecentPlays(userId: string, limit = 10) {
+  const res = await fetch(`${API_BASE}/api/interactions/recent?userId=${userId}&limit=${limit}`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export async function getRecommendations(userId: string) {
   const res = await fetch(`${API_BASE}/api/recommendations?userId=${userId}`);
   if (!res.ok) return [];

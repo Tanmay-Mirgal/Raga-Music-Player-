@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAudio } from '@/components/AudioProvider';
-import { searchSongs, toTrack, getImageUrl } from '@/lib/api';
+import { useUser } from '@clerk/nextjs';
+import { searchSongs, toTrack, getImageUrl, getRecentPlays } from '@/lib/api';
 import TrackRow from '@/components/TrackRow';
 import TrackOptionsMenu from '@/components/TrackOptionsMenu';
 import { Input } from '@/components/ui/input';
@@ -22,33 +23,62 @@ const CATEGORIES = [
   { id: '8', title: 'Relaxing', query: 'acoustic guitar', color: '#FFC862' },
 ];
 
-const STORAGE_KEY = 'raga_recent_searches';
 const MAX_RECENT = 10;
 
-function loadRecent(): any[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+function getDeletedIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem('raga_deleted_recent_ids') || '[]');
+  } catch {
+    return [];
+  }
 }
-function saveRecent(items: any[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+
+function addDeletedId(id: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getDeletedIds();
+    if (!current.includes(id)) {
+      localStorage.setItem('raga_deleted_recent_ids', JSON.stringify([...current, id]));
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
-async function addRecent(track: any, current: any[]): Promise<any[]> {
-  const updated = [track, ...current.filter((t) => t.id !== track.id)].slice(0, MAX_RECENT);
-  saveRecent(updated);
-  return updated;
+
+function clearDeletedIds() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('raga_deleted_recent_ids');
 }
 
 export default function SearchPage() {
+  const { user } = useUser();
   const { playTrack, currentTrack, isPlaying } = useAudio();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [recent, setRecent] = useState<any[]>([]);
-  const [isFocused, setIsFocused] = useState(false);
   const [menuTrack, setMenuTrack] = useState<Track | null>(null);
 
+  // Load recent plays from Database (synced across accounts)
+  const fetchRecent = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await getRecentPlays(user.id, MAX_RECENT + 5);
+      const deleted = getDeletedIds();
+      // Filter out deleted items and cap at MAX_RECENT
+      const filtered = data
+        .filter((track: any) => track && track.id && !deleted.includes(track.id))
+        .slice(0, MAX_RECENT);
+      setRecent(filtered);
+    } catch (e) {
+      console.error('Failed to load recent plays:', e);
+    }
+  }, [user]);
+
   useEffect(() => {
-    setRecent(loadRecent());
-  }, []);
+    fetchRecent();
+  }, [fetchRecent]);
 
   const performSearch = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); return; }
@@ -70,8 +100,21 @@ export default function SearchPage() {
 
   const handlePlaySong = async (song: any) => {
     const track = toTrack(song);
-    const updated = await addRecent(track, recent);
-    setRecent(updated);
+    
+    // Add locally for instant UI update
+    setRecent((prev) => {
+      const updated = [track, ...prev.filter((t) => t.id !== track.id)].slice(0, MAX_RECENT);
+      return updated;
+    });
+
+    // Remove from deleted list if it was previously deleted
+    if (typeof window !== 'undefined') {
+      const deleted = getDeletedIds();
+      if (deleted.includes(track.id)) {
+        localStorage.setItem('raga_deleted_recent_ids', JSON.stringify(deleted.filter((id) => id !== track.id)));
+      }
+    }
+
     playTrack(track, results.map(toTrack));
   };
 
@@ -80,21 +123,21 @@ export default function SearchPage() {
   };
 
   const handleRemoveRecent = (track: any) => {
-    const updated = recent.filter((t) => t.id !== track.id);
-    setRecent(updated);
-    saveRecent(updated);
+    addDeletedId(track.id);
+    setRecent((prev) => prev.filter((t) => t.id !== track.id));
   };
 
   const handleClearAll = () => {
+    recent.forEach((track) => addDeletedId(track.id));
     setRecent([]);
-    saveRecent([]);
   };
 
   const handleSelectCategory = (cat: typeof CATEGORIES[0]) => {
     setQuery(cat.query);
   };
 
-  const showRecent = query.length === 0 && isFocused && recent.length > 0;
+  // Recent is always visible when query is empty (like in Spotify)
+  const showRecent = query.length === 0 && recent.length > 0;
 
   return (
     <div className="min-h-screen bg-[#121212] px-4 sm:px-6 pt-6 pb-32">
@@ -106,10 +149,8 @@ export default function SearchPage() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setTimeout(() => setIsFocused(false), 150)}
           placeholder="What do you want to listen to?"
-          className="pl-10 pr-10 h-12 bg-white text-black placeholder:text-[#535353] border-0 rounded-md font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="pl-11 pr-10 h-12 bg-[#242424] dark:bg-[#242424] text-white !text-white placeholder:text-white/50 border-0 rounded-full font-semibold focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#2a2a2a] transition-colors"
         />
         {query.length > 0 && (
           <button
@@ -189,27 +230,27 @@ export default function SearchPage() {
                 ))}
               </div>
             </div>
-          ) : (
-            /* Browse Categories */
-            <div>
-              <h2 className="text-white font-bold text-base mb-4">Browse all</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleSelectCategory(cat)}
-                    className="relative h-24 rounded-lg p-3 text-left overflow-hidden hover:brightness-110 transition-all active:scale-95"
-                    style={{ backgroundColor: cat.color }}
-                  >
-                    <span className="text-white font-bold text-sm z-10 relative w-3/4 block">{cat.title}</span>
-                    <div className="absolute bottom-0 right-0 -translate-x-1 translate-y-1 opacity-20 rotate-[25deg]">
-                      <Disc3 size={60} className="text-white" />
-                    </div>
-                  </button>
-                ))}
-              </div>
+          ) : null}
+
+          {/* Browse Categories */}
+          <div className="mt-4">
+            <h2 className="text-white font-bold text-base mb-4">Browse all</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleSelectCategory(cat)}
+                  className="relative h-24 rounded-lg p-3 text-left overflow-hidden hover:brightness-110 transition-all active:scale-95"
+                  style={{ backgroundColor: cat.color }}
+                >
+                  <span className="text-white font-bold text-sm z-10 relative w-3/4 block">{cat.title}</span>
+                  <div className="absolute bottom-0 right-0 -translate-x-1 translate-y-1 opacity-20 rotate-[25deg]">
+                    <Disc3 size={60} className="text-white" />
+                  </div>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       )}
 

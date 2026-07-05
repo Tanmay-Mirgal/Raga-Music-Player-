@@ -15,6 +15,7 @@ export const recordInteraction = async (req, res) => {
     const artistName = track.artists?.primary?.[0]?.name || 'Unknown Artist';
     const albumName = track.album?.name || null;
     const imageUrl = track.image?.[1]?.url || track.image?.[0]?.url || null;
+    const rawDataJson = JSON.stringify(track);
 
     // Define rating weights for direct ML matrix factorization inputs
     let weight = 1;
@@ -22,7 +23,7 @@ export const recordInteraction = async (req, res) => {
     else if (interactionType === 'like') weight = 3;
     else if (interactionType === 'playlist_add') weight = 2;
 
-    // 1. Upsert SaavnSong
+    // 1. Upsert SaavnSong (saving rawDataJson for playback reconstruction)
     await prisma.saavnSong.upsert({
       where: { id: songId },
       update: {
@@ -30,6 +31,7 @@ export const recordInteraction = async (req, res) => {
         artist: artistName,
         album: albumName,
         imageUrl: imageUrl,
+        rawDataJson: rawDataJson,
       },
       create: {
         id: songId,
@@ -37,6 +39,7 @@ export const recordInteraction = async (req, res) => {
         artist: artistName,
         album: albumName,
         imageUrl: imageUrl,
+        rawDataJson: rawDataJson,
       },
     });
 
@@ -56,5 +59,73 @@ export const recordInteraction = async (req, res) => {
   } catch (error) {
     console.error('Error logging user interaction on server:', error);
     return res.status(500).json({ error: 'Failed to record user interaction' });
+  }
+};
+
+export const getRecentPlays = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId parameter' });
+    }
+
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Fetch user play interactions
+    const interactions = await prisma.userInteraction.findMany({
+      where: {
+        userId,
+        interactionType: 'play',
+      },
+      include: {
+        song: true,
+      },
+      orderBy: {
+        timestamp: 'desc',
+      },
+      take: 100, // Fetch more to filter duplicates in memory
+    });
+
+    // Deduplicate songs by ID while preserving order
+    const seenSongIds = new Set();
+    const recentTracks = [];
+
+    for (const inter of interactions) {
+      if (inter.song && !seenSongIds.has(inter.songId)) {
+        seenSongIds.add(inter.songId);
+        
+        let trackObj = null;
+        if (inter.song.rawDataJson) {
+          try {
+            trackObj = JSON.parse(inter.song.rawDataJson);
+          } catch (e) {
+            console.error('Error parsing rawDataJson:', e);
+          }
+        }
+        
+        // Fallback if rawDataJson is not available
+        if (!trackObj) {
+          trackObj = {
+            id: inter.song.id,
+            name: inter.song.name,
+            album: { name: inter.song.album },
+            artists: { primary: [{ name: inter.song.artist }] },
+            image: [
+              { url: inter.song.imageUrl || '' }, 
+              { url: inter.song.imageUrl || '' }, 
+              { url: inter.song.imageUrl || '' }
+            ],
+          };
+        }
+
+        recentTracks.push(trackObj);
+        if (recentTracks.length >= limit) break;
+      }
+    }
+
+    return res.status(200).json(recentTracks);
+  } catch (error) {
+    console.error('Error fetching recent plays:', error);
+    return res.status(500).json({ error: 'Failed to fetch recent plays' });
   }
 };
