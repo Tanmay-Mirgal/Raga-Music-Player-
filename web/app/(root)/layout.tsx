@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Sidebar />
 
         {/* Main Scrollable Content */}
-        <main className="flex-1 md:ml-[240px] lg:mr-[300px] min-h-screen pb-24 md:pb-20 overflow-y-auto">
+        <main className="flex-1 md:ml-[240px] lg:mr-[300px] min-h-screen pb-36 md:pb-24 overflow-y-auto">
           {children}
         </main>
 

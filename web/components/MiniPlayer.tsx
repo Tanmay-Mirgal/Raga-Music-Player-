@@ -48,7 +48,7 @@ export default function MiniPlayer() {
     <>
       {/* Mini Player Panel */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 md:left-[240px] bg-[#181818] border-t border-white/5 px-4 py-3 md:py-4 cursor-pointer select-none"
+        className="fixed bottom-[64px] md:bottom-0 left-0 right-0 z-40 md:left-[240px] bg-[#181818] border-t border-white/5 px-4 py-3 md:py-4 cursor-pointer select-none shadow-lg"
         style={{ backgroundImage: 'linear-gradient(to top, #121212, #181818)' }}
       >
         {/* --- MOBILE / TABLET LAYOUT (below md) --- */}

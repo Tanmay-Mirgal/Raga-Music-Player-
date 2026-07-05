@@ -46,7 +46,7 @@ export default function PreferenceModal({
   return (
     <Dialog open={open}>
       <DialogContent
-        className="bg-[#121212] border-[#282828] text-white max-w-lg p-0 overflow-hidden"
+        className="bg-[#121212] border-[#282828] text-white max-w-lg sm:max-w-lg p-0 overflow-hidden"
         showCloseButton={false}
       >
         {/* Step indicator */}
