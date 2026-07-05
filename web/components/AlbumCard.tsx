@@ -17,9 +17,9 @@ const AlbumCard = memo(function AlbumCard({
   id, name, artist, imageUrl, onPress, onMenuPress
 }: AlbumCardProps) {
   return (
-    <div className="w-[140px] flex-shrink-0 cursor-pointer group" onClick={onPress}>
+    <div className="w-[140px] md:w-[170px] flex-shrink-0 cursor-pointer group" onClick={onPress}>
       {/* Cover */}
-      <div className="relative w-[140px] h-[140px] rounded-md overflow-hidden bg-[#282828] mb-2">
+      <div className="relative w-[140px] h-[140px] md:w-[170px] md:h-[170px] rounded-md overflow-hidden bg-[#282828] mb-2">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
