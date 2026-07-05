@@ -17,7 +17,9 @@ const app = express();
 app.use('/api/webhooks', webhookRoutes);
 
 // Middlewares for API
-app.use(cors());
+app.use(cors({
+  origin: ["https://raga-music-player.vercel.app", "http://localhost:3000", "https://raga.tanmaymirgal.dev"],
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
